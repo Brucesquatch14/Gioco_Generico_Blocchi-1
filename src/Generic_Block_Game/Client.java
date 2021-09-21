@@ -28,7 +28,17 @@ public class Client {
     private static DataOutputStream out = null;
     private DataInputStream sock_in = null;
     private Game game;
-
+    private int id;
+    private int enemyId;
+    
+    public void setEnemyId(int id) {
+		enemyId = id;
+	}
+    
+	public int getId() {
+		return id;
+	}
+    
     private void isGameOver() {
         Thread thread = new Thread(() -> {
 
@@ -64,7 +74,8 @@ public class Client {
                     } else if (!isStarted && line.equals("Start")) {
 
                         game = new Game(this.socket);
-
+                        setId();
+                        game.setGameId(id);
                         isGameOver();
 
                         Thread main_thread = new Thread(() -> {
@@ -124,18 +135,12 @@ public class Client {
                             game.Resume();
                             isPaused = false;
                         }
-                    } else {
-                        if (!line.equals("Exit")) {
-                            boolean status = game.SendingEnd(line);
-
-                            if (!status) {
-                                game.Windup();
-                            }
-                        }else if (line.equals("Exit")) {
-                        	game.Windup();
-                        	isStarted=false;
-                        }
-                    }
+                    } else if (line.equals("Exit")) {
+						game.Windup();
+						isStarted=false;
+					} else /*if (!line.equals("Exit"))*/ {
+						game.SendingTrash(line,enemyId);
+					}
 
                 } catch (IOException i) {
                     System.out.println(i);
@@ -158,6 +163,11 @@ public class Client {
         thread.start();
 
     }
+    
+    private void setId() throws IOException {
+		id = sock_in.readInt();
+		System.out.println(id);
+	}
 
     // constructor to put ip address and port
     public Client(String address, int port) throws UnsupportedAudioFileException, LineUnavailableException, JavaLayerException {
